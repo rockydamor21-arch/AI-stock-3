@@ -21,14 +21,14 @@ if DEEPSEEK_KEY:
 def analyze_k_and_backtest(code, days=5):
     """K线技术分析与回测收益"""
     try:
-        # 统一代码格式，去掉可能存在的后缀
-        symbol = "".join(filter(str.isdigit, code))
+        # 提取纯数字代码
+        symbol = "".join(filter(str.isdigit, str(code)))
         hist = ak.stock_zh_a_hist(symbol=symbol, period="daily", adjust="qfq").tail(60)
         
         if hist.empty or len(hist) < 20:
             return "数据不足", 50, 0.0
         
-        # 计算技术指标 (使用 pandas_ta)
+        # 计算技术指标
         hist['SMA_5'] = ta.sma(hist['收盘'], length=5)
         hist['SMA_20'] = ta.sma(hist['收盘'], length=20)
         
@@ -85,4 +85,10 @@ target_n = st.sidebar.slider("初筛股票数量", 5, 30, 10)
 
 if st.button("🔥 开始全自动策略扫描"):
     if not DEEPSEEK_KEY:
-        st.error("❌
+        st.error("❌ 请先在侧边栏输入 DeepSeek API Key")
+    else:
+        with st.spinner("🔍 正在扫描全市场主力资金并调用 AI 进行决策..."):
+            # 第一层：获取主力资金流向排行
+            try:
+                df_funds = ak.stock_individual_fund_flow_rank(symbol="今日")
+                if df_funds is None or df_funds.empty
