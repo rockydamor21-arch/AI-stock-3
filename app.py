@@ -88,19 +88,16 @@ if st.button("🔥 开始全自动策略扫描"):
         st.error("❌ 请先在侧边栏输入 DeepSeek API Key")
     else:
         with st.spinner("🔍 正在扫描全市场主力资金并调用 AI 进行决策..."):
-            # --- 核心尝试块 ---
             try:
-                # 获取数据
-                df_funds = ak.stock_individual_fund_flow_rank(symbol="今日")
+                # --- 核心修复点：删除了接口中的 symbol 参数 ---
+                df_funds = ak.stock_individual_fund_flow_rank() 
                 
-                # 容错处理
                 if df_funds is None or df_funds.empty:
-                    st.warning("⚠️ 今日资金流数据未更新，切换至即时行情...")
+                    st.warning("⚠️ 资金流接口返回空，尝试备选行情接口...")
                     df_funds = ak.stock_zh_a_spot_em().sort_values(by="成交额", ascending=False)
                 
                 candidates = df_funds.head(target_n)
                 
-                # 核心循环
                 final_list = []
                 progress_bar = st.progress(0)
                 candidate_data = candidates.to_dict('records')
@@ -109,20 +106,20 @@ if st.button("🔥 开始全自动策略扫描"):
                     code = str(row.get('代码', ''))
                     name = str(row.get('名称', '未知'))
                     
-                    # 1. 技术面
+                    # 1. 技术面分析
                     k_pattern, k_score, history_yield = analyze_k_and_backtest(code)
                     
-                    # 2. 消息面
+                    # 2. 消息面获取
                     try:
                         news_df = ak.stock_news_em(symbol=code)
                         news_titles = news_df['新闻标题'].tolist() if not news_df.empty else []
                     except:
                         news_titles = []
                     
-                    # 3. AI 研判
+                    # 3. AI 智能研判
                     ai_info, ai_score = get_ai_opinion(name, news_titles)
                     
-                    # 综合分
+                    # 综合评分逻辑
                     total_score = (k_score * 0.45) + (ai_score * 0.45) + 10 
                     
                     final_list.append({
@@ -136,7 +133,6 @@ if st.button("🔥 开始全自动策略扫描"):
                     progress_bar.progress((i + 1) / target_n)
                     time.sleep(0.1)
 
-                # 结果展示
                 st.success("✅ 智能预测生成成功！")
                 result_df = pd.DataFrame(final_list).sort_values(by="明日预测分", ascending=False)
                 st.dataframe(result_df, hide_index=True, use_container_width=True)
@@ -144,6 +140,7 @@ if st.button("🔥 开始全自动策略扫描"):
 
             except Exception as outer_e:
                 st.error(f"执行过程中发生错误: {outer_e}")
+                st.info("提示：请检查网络连接或 AkShare 库版本是否最新。")
 
 # 侧边栏免责声明
 st.sidebar.markdown("---")
