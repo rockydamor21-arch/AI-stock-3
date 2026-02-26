@@ -1,5 +1,6 @@
 streamlit
-akshare
-pandas
+yfinance
 pandas_ta
-openai
+plotly
+pandas
+anthropic
