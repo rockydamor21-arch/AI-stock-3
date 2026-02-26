@@ -90,5 +90,4 @@ if st.button("🔥 开始全自动策略扫描"):
         with st.spinner("🔍 正在扫描全市场主力资金并调用 AI 进行决策..."):
             # 第一层：获取主力资金流向排行
             try:
-                df_funds = ak.stock_individual_fund_flow_rank(symbol="今日")
-                if df_funds is None or df_funds.empty
+                df_funds = ak.stock
